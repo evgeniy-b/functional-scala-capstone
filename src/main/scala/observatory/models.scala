@@ -1,0 +1,73 @@
+package observatory
+
+import com.sksamuel.scrimage.Pixel
+import math._
+
+/**
+  * Introduced in Week 1. Represents a location on the globe.
+  *
+  * @param lat Degrees of latitude, -90 ≤ lat ≤ 90
+  * @param lon Degrees of longitude, -180 ≤ lon ≤ 180
+  */
+case class Location(lat: Double, lon: Double) {
+  private val EARTH_RADIUS = 6378.137d
+
+  def distanceTo(another: Location): Double = {
+    if (another == this) 0
+    else if (isAntipode(another)) Pi * EARTH_RADIUS
+    else calculateDistanceTo(another)
+  }
+
+  def isAntipode(another: Location) =
+    lat == -another.lat && (lon == another.lon + 180.0 || another.lon == lon + 180.0)
+
+  private def calculateDistanceTo(another: Location) = {
+    val dLat = toRadians(another.lat - lat)
+    val dLon = toRadians(another.lon - lon)
+    val a = sin(dLat / 2) * sin(dLat / 2) + sin(dLon / 2) * sin(dLon / 2) * cos(toRadians(lat)) * cos(toRadians(another.lat))
+    val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    EARTH_RADIUS * c
+  }
+}
+
+/**
+  * Introduced in Week 3. Represents a tiled web map tile.
+  * See https://en.wikipedia.org/wiki/Tiled_web_map
+  * Based on http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
+  * @param x X coordinate of the tile
+  * @param y Y coordinate of the tile
+  * @param zoom Zoom level, 0 ≤ zoom ≤ 19
+  */
+case class Tile(x: Int, y: Int, zoom: Int) {
+  def toLocation = Location(
+    toDegrees(atan(sinh(Pi * (1.0 - 2.0 * y.toDouble / (1 << zoom))))),
+    x.toDouble / (1 << zoom) * 360.0 - 180.0
+  )
+}
+
+/**
+  * Introduced in Week 4. Represents a point on a grid composed of
+  * circles of latitudes and lines of longitude.
+  * @param lat Circle of latitude in degrees, -89 ≤ lat ≤ 90
+  * @param lon Line of longitude in degrees, -180 ≤ lon ≤ 179
+  */
+case class GridLocation(lat: Int, lon: Int)
+
+/**
+  * Introduced in Week 5. Represents a point inside of a grid cell.
+  * @param x X coordinate inside the cell, 0 ≤ x ≤ 1
+  * @param y Y coordinate inside the cell, 0 ≤ y ≤ 1
+  */
+case class CellPoint(x: Double, y: Double)
+
+/**
+  * Introduced in Week 2. Represents an RGB color.
+  * @param red Level of red, 0 ≤ red ≤ 255
+  * @param green Level of green, 0 ≤ green ≤ 255
+  * @param blue Level of blue, 0 ≤ blue ≤ 255
+  */
+case class Color(red: Int, green: Int, blue: Int) {
+  def toPixel(alpha: Int = 255) = Pixel(red, green, blue, alpha)
+}
+

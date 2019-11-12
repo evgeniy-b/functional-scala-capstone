@@ -1,0 +1,9 @@
+# folders
+.idea
+target
+lib
+classes
+src/main/resources
+
+# files
+*.iml
